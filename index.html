@@ -4,118 +4,142 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hello ⋅ thurs.top</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        body{height:100vh;background:linear-gradient(-45deg,#ee7752,#e73c7e,#23a6d5,#23d5ab);background-size:400% 400%;animation:g 15s ease infinite;font-family:'Poppins',sans-serif;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative}
+        body{height:100vh;background:linear-gradient(-45deg,#ee7752,#e73c7e,#23a6d5,#23d5ab);background-size:400% 400%;animation:g 15s ease infinite;font-family:'Poppins',sans-serif;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;color:white}
         @keyframes g{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-        h1{font-size:10rem;font-weight:900;color:white;text-shadow:0 20px 40px rgba(0,0,0,.3);animation:f 6s ease-in-out infinite;cursor:pointer}
-        p{color:rgba(255,255,255,.9);font-size:1.8rem;margin-top:2rem;opacity:0;animation:i 1s forwards 1s}
+        h1{font-size:10rem;font-weight:900;text-shadow:0 20px 40px rgba(0,0,0,.3);animation:f 6s ease-in-out infinite;margin-bottom:20px}
         @keyframes f{0%,100%{transform:translateY(0)}50%{transform:translateY(-30px)}}
+        p{font-size:1.8rem;opacity:0;animation:i 1s forwards 1s;margin-bottom:40px}
         @keyframes i{to{opacity:1}}
-        .btns{position:absolute;bottom:80px;display:flex;gap:20px;flex-wrap:wrap;justify-content:center;width:90%}
-        button{background:rgba(255,255,255,0.2);color:white;border:3px solid white;border-radius:20px;padding:16px 32px;font-size:1.5rem;font-weight:700;cursor:pointer;backdrop-filter:blur(10px);transition:.3s;animation:fadeIn 2s forwards 2s}
+        button{background:rgba(255,255,255,0.2);border:3px solid white;border-radius:20px;padding:16px 40px;font-size:1.8rem;font-weight:700;cursor:pointer;backdrop-filter:blur(10px);transition:.3s}
         button:hover{transform:scale(1.1);background:rgba(255,255,255,0.4)}
-        #gameArea{position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .4s}
-        #gameArea.active{opacity:1;pointer-events:all}
-        .close{position:absolute;top:20px;right:30px;font-size:50px;color:white;cursor:pointer;z-index:1000}
-        @media(max-width:768px){h1{font-size:5.5rem}p{font-size:1.3rem}.btns{bottom:40px;gap:15px}button{font-size:1.2rem;padding:12px 24px}}
+        
+        /* 2048 游戏面板 */
+        #game2048{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(12px);z-index:999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s}
+        #game2048.active{opacity:1;pointer-events:all}
+        .game-container{background:#111;border-radius:20px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,0.6);position:relative;width:480px;max-width:95vw}
+        .close{position:absolute;top:10px;right:15px;font-size:50px;cursor:pointer;z-index:10}
+        #score{display:absolute;top:15px;left:20px;font-size:24px;font-weight:700}
+        #grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;background:#000;padding:12px;border-radius:12px;margin-top:60px}
+        .tile{position:relative;width:100%;height:100px;background:#222;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:900;color:white;transition:all .15s}
+        .tile::before{content:'';display:block;padding-top:100%}
+        .tile span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+        @media(max-width:768px){h1{font-size:5.5rem}p{font-size:1.3rem}button{font-size:1.4rem;padding:12px 30px}.game-container{width:96vw}}
     </style>
 </head>
 <body>
-    <div style="text-align:center">
-        <h1>Hello</h1>
-        <p>欢迎来到 thurs.top ✨</p>
-    </div>
+    <h1>Hello</h1>
+    <p>欢迎来到 thurs.top</p>
+    <button onclick="document.getElementById('game2048').classList.add('active')">开始玩 2048</button>
 
-    <div class="btns">
-        <button onclick="startGame(1)">玻璃碎裂</button>
-        <button onclick="startGame(2)">贪吃蛇</button>
-        <button onclick="startGame(3)">烟花派对</button>
-    </div>
-
-    <div id="gameArea">
-        <div class="close" onclick="closeGame()">×</div>
-        <div id="gameContent"></div>
+    <div id="game2048">
+        <div class="game-container">
+            <div class="close" onclick="document.getElementById('game2048').classList.remove('active')">×</div>
+            <div id="score">得分: 0</div>
+            <div id="grid"></div>
+        </div>
     </div>
 
 <script>
-    function startGame(id){
-        const area = document.getElementById('gameArea');
-        const content = document.getElementById('gameContent');
-        content.innerHTML = '';
-        area.classList.add('active');
+    const grid = document.getElementById('grid');
+    const scoreEl = document.getElementById('score');
+    let tiles = [];
+    let score = 0;
 
-        if(id===1){ // 玻璃碎裂
-            document.querySelector('h1').click();
-        }
-        if(id===2){ // 贪吃蛇
-            content.innerHTML = `<canvas id="snake" width="500" height="500" style="border:5px solid white;border-radius:20px;background:#000"></canvas>
-            <div style="position:absolute;bottom:20px;color:white;font-size:20px">方向键控制 · 空格重新开始</div>`;
-            const c=document.getElementById('snake'),ctx=c.getContext('2d');
-            let s=[{x:250,y:250}],f={},d={x:10,y:0},score=0,running=true;
-            function init(){s=[{x:250,y:250}];f={x:Math.floor(Math.random()*49)*10,y:Math.floor(Math.random()*49)*10};d={x:10,y:0};score=0;running=true;}
-            document.addEventListener('keydown',e=>{
-                if(e.keyCode===32){init();return;}
-                if(e.keyCode===37&&d.x===0)d={x:-10,y:0};
-                if(e.keyCode===39&&d.x===0)d={x:10,y:0};
-                if(e.keyCode===38&&d.y===0)d={x:0,y:-10};
-                if(e.keyCode===40&&d.y===0)d={x:0,y:10};
-            });
-            function loop(){
-                if(!running)return;
-                let h=s[0],n={x:h.x+d.x,y:h.y+d.y};
-                if(n.x<0||n.x>=500||n.y<0||n.y>=500||s.some(p=>p.x===n.x&&p.y===n.y)){alert('Game Over! 得分: '+score);running=false;return;}
-                s.unshift(n);
-                if(n.x===f.x&&n.y===f.y){score++;f={x:Math.floor(Math.random()*50)*10,y:Math.floor(Math.random()*50)*10};}else s.pop();
-                ctx.fillStyle='#000';ctx.fillRect(0,0,500,500);
-                ctx.fillStyle='#0f0';s.forEach(p=>ctx.fillRect(p.x,p.y,10,10));
-                ctx.fillStyle='#f00';ctx.fillRect(f.x,f.y,10,10);
-                ctx.fillStyle='#fff';ctx.font='24px Arial';ctx.fillText('得分: '+score,10,40);
-                requestAnimationFrame(loop);
+    const colors = {
+        0:'#000',2:'#eee4da',4:'#ede0c8',8:'#f2b179',16:'#f59563',32:'#f67c5f',
+        64:'#f65e3b',128:'#edcf72',256:'#edcc61',512:'#edc850',1024:'#edc53f',2048:'#edc22e'
+    };
+
+    function initGame(){
+        tiles = Array(16).fill(0);
+        score = 0; scoreEl.textContent = '得分: 0';
+        grid.innerHTML = '';
+        addNewTile(); addNewTile();
+        render();
+    }
+
+    function addNewTile(){
+        const empty = tiles.map((v,i)=>v===0?i:null).filter(v=>v!==null);
+        if(empty.length===0) return;
+        const pos = empty[Math.floor(Math.random()*empty.length)];
+        tiles[pos] = Math.random()<0.9?2:4;
+    }
+
+    function render(){
+        grid.innerHTML = '';
+        tiles.forEach((val,i)=>{
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            if(val){
+                tile.style.background = colors[val] || '#edc22e';
+                tile.innerHTML = `<span>${val}</span>`;
+                tile.style.transform = 'scale(0)';
+                setTimeout(()=>tile.style.transform='scale(1)',10);
             }
-            init();loop();
-        }
-        if(id===3){ // 烟花
-            content.innerHTML = '<div style="color:white;font-size:28px">狂点屏幕放烟花！</div>';
-            document.addEventListener('click',fireworks);
-        }
-    }
-    function closeGame(){
-        document.getElementById('gameArea').classList.remove('active');
-        document.getElementById('gameContent').innerHTML = '';
-        document.removeEventListener('click',fireworks);
-    }
-    function fireworks(e){
-        const colors=['#ff0066','#00ffcc','#ffd700','#ff69b4','#00bfff','#ff4500'];
-        for(let i=0;i<40;i++){
-            const p=document.createElement('div');
-            p.style.cssText=`position:fixed;left:\( {e.clientX}px;top: \){e.clientY}px;width:8px;height:8px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:50%;pointer-events:none;z-index:9999;`;
-            document.body.appendChild(p);
-            const a=Math.random()*Math.PI*2,v=4+Math.random()*12;
-            gsap.to(p,{x:Math.cos(a)*v*60,y:Math.sin(a)*v*60-150,opacity:0,scale:0,duration:1.8,ease:"power2.out",onComplete:()=>p.remove()});
-        }
+            grid.appendChild(tile);
+        });
     }
 
-    // 原有的玻璃碎裂特效（点 Hello 触发）
-    document.querySelector('h1').addEventListener('click', function() {
-        const text = this.textContent;
-        this.textContent = '';
-        const chars = text.split('').map(char => {
-            const span = document.createElement('span');
-            span.textContent = char === ' ' ? '\u00A0' : char;
-            span.style.display = 'inline-block';
-            span.style.position = 'relative';
-            this.appendChild(span);
-            return span;
-        });
-        gsap.to(chars, {duration:0.8,y:()=>gsap.utils.random(-200,200),x:()=>gsap.utils.random(-300,300),
-            rotation:()=>gsap.utils.random(-360,360),opacity:0,scale:0,ease:"power3.out",stagger:0.03,
-            onComplete:()=>{setTimeout(()=>{gsap.to(chars,{y:0,x:0,rotation:0,opacity:1,scale:1,duration:0.8,ease:"back.out(1.7)",stagger:0.03,
-                onComplete:()=>{chars.forEach(c=>c.style='');document.querySelector('h1').textContent=text;}});},400);}
-        });
+    function move(dir){
+        let moved = false;
+        const old = [...tiles];
+        if(dir==='left' || dir==='right'){
+            for(let row=0;row<4;row++){
+                let line = tiles.slice(row*4,row*4+4).filter(v=>v);
+                if(dir==='right') line.reverse();
+                for(let i=0;i<line.length-1;i++){
+                    if(line[i]===line[i+1]){
+                        line[i]*=2; score+=line[i]; line[i+1]=0; moved=true;
+                    }
+                }
+                line = line.filter(v=>v);
+                while(line.length<4) dir==='left'?line.push(0):line.unshift(0);
+                if(dir==='right') line.reverse();
+                for(let i=0;i<4;i++) tiles[row*4+i] = line[i];
+            }
+        }else{
+            for(let col=0;col<4;col++){
+                let line = [tiles[col],tiles[col+4],tiles[col+8],tiles[col+12]].filter(v=>v);
+                if(dir==='down') line.reverse();
+                for(let i=0;i<line.length-1;i++){
+                    if(line[i]===line[i+1]){
+                        line[i]*=2; score+=line[i]; line[i+1]=0; moved=true;
+                    }
+                }
+                line = line.filter(v=>v);
+                while(line.length<4) dir==='up'?line.push(0):line.unshift(0);
+                if(dir==='down') line.reverse();
+                [0,1,2,3].forEach((_,i)=>tiles[col+i*4]=line[i]);
+            }
+        }
+        if(JSON.stringify(old)!==JSON.stringify(tiles)){moved=true; addNewTile();}
+        if(moved){scoreEl.textContent=`得分: ${score}`; render();}
+        if(tiles.every(v=>v!==0) && !canMove()) setTimeout(()=>alert('Game Over!\n最终得分: '+score),300);
+    }
+
+    function canMove(){
+        for(let i=0;i<16;i++){
+            if(tiles[i]===0) return true;
+            if(i%4<3 && tiles[i]===tiles[i+1]) return true;
+            if(i<12 && tiles[i]===tiles[i+4]) return true;
+        }
+        return false;
+    }
+
+    document.addEventListener('keydown',e=>{
+        if(!document.getElementById('game2048').classList.contains('active')) return;
+        if(e.key==='ArrowLeft') move('left');
+        if(e.key==='ArrowRight') move('right');
+        if(e.key==='ArrowUp') move('up');
+        if(e.key==='ArrowDown') move('down');
     });
+
+    // 启动游戏
+    document.querySelector('button').addEventListener('click',()=>{initGame();});
+    initGame(); // 首次自动初始化
 </script>
 </body>
 </html>
