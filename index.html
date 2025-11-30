@@ -3,86 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello ⋅ thurs.top</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <title>今天吃什么 @ thurs.top</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body {
-            height: 100vh;
-            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
-            font-family: 'Poppins', sans-serif;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        @keyframes gradient {
-            0% {background-position:0% 50%}
-            50% {background-position:100% 50%}
-            100% {background-position:0% 50%}
-        }
-        .container {
-            text-align: center;
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 10rem;
-            font-weight: 900;
-            color: white;
-            text-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            letter-spacing: -0.05em;
-            animation: float 6s ease-in-out infinite;
-        }
-        p {
-            color: rgba(255,255,255,0.9);
-            font-size: 1.8rem;
-            margin-top: 2rem;
-            opacity: 0;
-            animation: fadeIn 1s forwards 1s;
-        }
-        .sparkle {
-            position: absolute;
-            color: white;
-            font-size: 2rem;
-            pointer-events: none;
-            animation: sparkle 2s linear forwards;
-        }
-        @keyframes float {
-            0%,100% { transform: translateY(0px); }
-            50% { transform: translateY(-30px); }
-        }
-        @keyframes fadeIn {
-            to { opacity: 1; }
-        }
-        @keyframes sparkle {
-            0% { transform: translateY(0) rotate(0); opacity: 1; }
-            100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
-        }
-        @media (max-width: 768px) {
-            h1 { font-size: 5.5rem; }
-            p { font-size: 1.3rem; }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{height:100vh;background:linear-gradient(-45deg,#ee7752,#e73c7e,#23a6d5,#23d5ab);background-size:400% 400%;animation:g 15s ease infinite;font-family:'Poppins',sans-serif;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;position:relative}
+        @keyframes g{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+        h1{font-size:9rem;font-weight:900;text-shadow:0 20px 40px rgba(0,0,0,.4);animation:f 6s ease-in-out infinite;margin-bottom:10px}
+        @keyframes f{0%,100%{transform:translateY(0)}50%{transform:translateY(-30px)}}
+        p{font-size:1.8rem;margin-bottom:40px;opacity:0;animation:i 1s forwards 1s}
+        @keyframes i{to{opacity:1}}
+        button.main{background:rgba(255,255,255,0.25);border:4px solid white;border-radius:25px;padding:18px 50px;font-size:2.2rem;font-weight:700;cursor:pointer;backdrop-filter:blur(12px);transition:.3s}
+        button.main:hover{transform:scale(1.1);background:rgba(255,255,255,0.4)}
+
+        /* 转盘面板 */
+        #wheelPanel{position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(15px);z-index:999;display:none;flex-direction:column;align-items:center;justify-content:center}
+        #wheelPanel.active{display:flex}
+        .close{position:absolute;top:20px;right:30px;font-size:60px;cursor:pointer;opacity:0.8}
+        #wheelContainer{width:380px;height:380px;position:relative;margin:20px}
+        #wheel{width:100%;height:100%;border-radius:50%;overflow:hidden;box-shadow:0 0 60px rgba(255,255,255,0.6);transition:transform 4.5s cubic-bezier(0.17,0.67,0.12,0.99)}
+        .sector{position:absolute;width:50%;height:50%;transform-origin:100% 100%;clip-path:polygon(0 0,100% 0,100% 100%)}
+        #pointer{position:absolute;top:-12px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:22px solid transparent;border-right:22px solid transparent;border-top:50px solid #ffd700;z-index:10}
+        #result{font-size:3.2rem;margin:25px;font-weight:900;text-shadow:0 0 20px gold}
+
+        .controls{margin-top:20px;display:flex;gap:15px;flex-wrap:wrap;justify-content:center}
+        input{background:#333;color:white;border:none;padding:12px 20px;border-radius:12px;font-size:1.2rem;width:240px}
+        button.ctrl{background:#ff4757;border:none;color:white;padding:12px 24px;border-radius:12px;cursor:pointer;font-weight:700}
+        button.ctrl.add{background:#2ed573}
+        #foodList{margin-top:20px;max-height:160px;overflow:auto;width:340px;background:rgba(255,255,255,0.1);border-radius:12px;padding:10px}
+        .food-item{display:flex;justify-content:space-between;align-items:center;margin:8px 0;padding:8px;background:rgba(255,255,255,0.1);border-radius:8px;font-size:1.1rem}
+        .food-item button{background:none;border:none;color:#ff6b6b;font-size:1.4rem;cursor:pointer}
+
+        @media(max-width:768px){
+            h1{font-size:5.5rem}p{font-size:1.3rem}
+            button.main{font-size:1.8rem;padding:14px 40px}
+            #wheelContainer{width:300px;height:300px}
+            input{width:200px}
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Hello</h1>
-        <p>欢迎来到 thurs.top</p>
+    <h1>Hello</h1>
+    <p>欢迎来到 thurs.top</p>
+    <button class="main" onclick="document.getElementById('wheelPanel').classList.add('active')">今天吃什么？</button>
+
+    <div id="wheelPanel">
+        <div class="close" onclick="this.parentElement.classList.remove('active')">×</div>
+        <div id="wheelContainer">
+            <div id="pointer"></div>
+            <canvas id="wheel"></canvas>
+        </div>
+        <div id="result">点击开始转！</div>
+        <button class="main" onclick="spin()">开始转！</button>
+
+        <div class="controls">
+            <input type="text" id="newFood" placeholder="想吃啥？输完点添加">
+            <button class="ctrl add" onclick="addFood()">+ 添加</button>
+        </div>
+        <div id="foodList"></div>
     </div>
 
-    <script>
-        // 点击页面撒星星
-        document.addEventListener('click', function(e) {
-            const sparkle = document.createElement('div');
-            sparkle.className = 'sparkle';
-            sparkle.textContent = ['✦','✧','★','☆','✩','✬','✭','✮'][Math.floor(Math.random()*8)];
-            sparkle.style.left = e.clientX + Math.random()*40 - 20 + 'px';
-            sparkle.style.top = e.clientY + 'px';
-            document.body.appendChild(sparkle);
-            setTimeout(() => sparkle.remove(), 2000);
+<script>
+    const defaultFoods = ["火锅","日料寿司","麻辣烫","炸鸡汉堡","螺蛳粉","烤肉自助","奶茶甜品","牛排意面","川菜馆","披萨","烤串","海底捞","砂锅粥","烧烤","麻辣香锅","小笼包","烤鱼","黄焖鸡","酸菜鱼","水煮肉片"];
+    let foods = JSON.parse(localStorage.getItem('myFoods')) || defaultFoods;
+    const canvas = document.getElementById('wheel');
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.height = 380;
+    const result = document.getElementById('result');
+    const foodList = document.getElementById('foodList');
+
+    function drawWheel(){
+        if(foods.length===0) return;
+        const angle = 2*Math.PI/foods.length;
+        const colors = ['#ff6b6b','#feca57','#48dbfb','#ff9ff3','#54a0ff','#5f27cd','#c8d6e5','#1dd1a1','#f8b500','#ff3838','#ff9f43','#6c5ce7','#a29bfe','#fd79a8','#00d2d3','#ff6b6b','#feca57'];
+        ctx.clearRect(0,0,380,380);
+        foods.forEach((food,i)=>{
+            ctx.beginPath();
+            ctx.moveTo(190,190);
+            ctx.arc(190,190,190,i*angle,(i+1)*angle);
+            ctx.fillStyle = colors[i%colors.length];
+            ctx.fill();
+            ctx.save();
+            ctx.translate(190,190);
+            ctx.rotate(i*angle + angle/2);
+            ctx.font = foods.length>15?'bold 14px Poppins':'bold 18px Poppins';
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.fillText(food,100,10);
+            ctx.restore();
         });
-    </script>
+        renderList();
+    }
+
+    function renderList(){
+        foodList.innerHTML='';
+        foods.forEach((f,i)=>{
+            const div=document.createElement('div');
+            div.className='food-item';
+            div.innerHTML=`<span>\( {f}</span><button onclick="deleteFood( \){i})">×</button>`;
+            foodList.appendChild(div);
+        });
+        localStorage.setItem('myFoods',JSON.stringify(foods));
+    }
+
+    function addFood(){
+        const val=document.getElementById('newFood').value.trim();
+        if(val && !foods.includes(val)){
+            foods.push(val);
+            document.getElementById('newFood').value='';
+            drawWheel();
+        }
+    }
+
+    function deleteFood(i){
+        foods.splice(i,1);
+        drawWheel();
+    }
+
+    function spin(){
+        if(foods.length===0) return;
+        result.textContent = '转转转...';
+        const spinDeg = 1080 + Math.floor(Math.random()*3600);
+        canvas.style.transform = `rotate(${spinDeg}deg)`;
+        setTimeout(()=>{
+            const realDeg = spinDeg % 360;
+            const index = Math.floor((360 - realDeg + 10) / (360/foods.length)) % foods.length;
+            result.innerHTML = `今天吃：<br><span style="font-size:4rem;color:#ffd700">${foods[index]}</span> ！`;
+        },4600);
+    }
+
+    drawWheel(); // 初始化
+</script>
 </body>
 </html>
