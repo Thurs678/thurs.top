@@ -16,19 +16,19 @@
         button{background:rgba(255,255,255,0.25);border:4px solid white;border-radius:25px;padding:18px 50px;font-size:2rem;font-weight:700;cursor:pointer;backdrop-filter:blur(12px);transition:.3s;margin-top:40px}
         button:hover{transform:scale(1.1);background:rgba(255,255,255,0.4)}
 
-        /* 密码输入层 */
         #loginOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.95);backdrop-filter:blur(15px);z-index:998;display:none;flex-direction:column;align-items:center;justify-content:center}
         #loginOverlay.active{display:flex}
         #loginOverlay h2{font-size:3rem;margin-bottom:30px}
         #roomInput{width:320px;padding:18px;font-size:1.6rem;background:#333;color:white;border:none;border-radius:16px;text-align:center}
         #enterBtn{margin-top:20px;padding:16px 50px;font-size:1.8rem}
 
-        /* 转盘主面板 */
         #wheelPanel{position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(15px);z-index:999;display:none;flex-direction:column;align-items:center;justify-content:center}
         #wheelPanel.active{display:flex}
         .close{position:absolute;top:20px;right:30px;font-size:60px;cursor:pointer;opacity:0.8}
         #roomInfo{position:absolute;top:20px;left:20px;background:rgba(255,255,255,0.2);padding:8px 16px;border-radius:20px;font-size:1.1rem}
+        #wheelContainer{position:relative;width:380px;height:380px;margin:20px}
         canvas{box-shadow:0 0 60px rgba(255,255,255,0.6);border-radius:50%}
+        #pointer{position:absolute;top:-12px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:22px solid transparent;border-right:22px solid transparent;border-top:50px solid #ffd700;z-index:10}
         #result{font-size:3.2rem;margin:20px;font-weight:900;text-shadow:0 0 20px gold;line-height:1.4}
         .controls{display:flex;gap:15px;margin:20px;flex-wrap:wrap;justify-content:center}
         input{background:#333;color:white;border:none;padding:12px 20px;border-radius:12px;font-size:1.2rem;width:240px}
@@ -40,9 +40,7 @@
         #emptyTip{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:2rem;color:rgba(255,255,255,0.6);pointer-events:none}
 
         @media(max-width:768px){
-            h1{font-size:5.5rem}p{font-size:1.3rem}
-            button{font-size:1.6rem;padding:14px 40px}
-            #roomInput{width:280px}
+            h1{font-size:5.5rem}p{font-size:1.3rem}button{font-size:1.6rem;padding:14px 40px}#roomInput{width:280px}#wheelContainer{width:300px;height:300px}
         }
     </style>
 </head>
@@ -51,7 +49,6 @@
     <p>欢迎来到 thurs.top</p>
     <button onclick="document.getElementById('loginOverlay').classList.add('active')">今天吃什么？</button>
 
-    <!-- 密码输入层 -->
     <div id="loginOverlay">
         <h2>输入房间密码</h2>
         <input type="text" id="roomInput" placeholder="比如：xiaoming" autofocus>
@@ -59,11 +56,11 @@
         <p style="margin-top:20px">不同密码 = 完全独立的转盘</p>
     </div>
 
-    <!-- 转盘主面板 -->
     <div id="wheelPanel">
         <div class="close" onclick="closeWheel()">X</div>
         <div id="roomInfo">房间：加载中...</div>
-        <div style="position:relative">
+        <div id="wheelContainer">
+            <div id="pointer"></div>
             <canvas id="wheel" width="380" height="380"></canvas>
             <div id="emptyTip">快去添加你想吃的美食吧～</div>
         </div>
@@ -85,9 +82,10 @@
     const emptyTip = document.getElementById('emptyTip');
     let foods = [];
     let currentRoom = '';
+    let spinAngle = 0;
+    let spinning = false;
 
-    // 免费云数据库后端（已部署好，永久免费）
-    const API = "https://eat-what-demo.deno.dev";
+    const API = "https://eat-what-final.deno.dev"; // 超级稳定的后端
 
     function enterRoom(){
         currentRoom = document.getElementById('roomInput').value.trim() || 'default';
@@ -97,19 +95,31 @@
         loadFoods();
     }
     async function loadFoods(){
-        const res = await fetch(`\( {API}/get?room= \){currentRoom}`);
-        const data = await res.json();
-        foods = data.foods || [];
-        drawWheel();
+        try{
+            const res = await fetch(`\( {API}/get?room= \){encodeURIComponent(currentRoom)}`);
+            const data = await res.json();
+            foods = data.foods || [];
+        }catch(e){
+            foods = [];
+        }
+        refreshAll();
     }
     async function saveFoods(){
-        await fetch(`${API}/save`,{
-            method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({room:currentRoom,foods})
-        });
+        try{
+            await fetch(`${API}/save`,{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({room:currentRoom,foods})
+            });
+        }catch(e){}
     }
     function closeWheel(){
         document.getElementById('wheelPanel').classList.remove('active');
+    }
+
+    function refreshAll(){
+        drawWheel();
+        renderList();
     }
 
     function drawWheel(){
@@ -117,29 +127,31 @@
         if(foods.length===0){
             emptyTip.style.display='block';
             result.textContent='先添加美食才能转哦～';
-            foodList.innerHTML='';
             return;
         }
         emptyTip.style.display='none';
         const angle = 2*Math.PI/foods.length;
         const colors = ['#ff6b6b','#feca57','#48dbfb','#ff9ff3','#54a0ff','#5f27cd','#c8d6e5','#1dd1a1','#f8b500','#ff3838'];
         foods.forEach((f,i)=>{
-            ctx.beginPath();
-            ctx.moveTo(190,190);
-            ctx.arc(190,190,190,i*angle,(i+1)*angle);
-            ctx.fillStyle=colors[i%colors.length];
-            ctx.fill();
             ctx.save();
             ctx.translate(190,190);
-            ctx.rotate(i*angle + angle/2);
+            ctx.rotate(spinAngle + i*angle);
+            ctx.beginPath();
+            ctx.moveTo(0,0);
+            ctx.arc(0,0,190,0,angle);
+            ctx.closePath();
+            ctx.fillStyle=colors[i%colors.length];
+            ctx.fill();
+            ctx.rotate(angle/2);
             ctx.font=foods.length>15?'bold 14px Poppins':'bold 20px Poppins';
             ctx.fillStyle='white';
             ctx.textAlign='center';
-            ctx.fillText(f,100,10);
+            ctx.textBaseline='middle';
+            ctx.fillText(f,100,0);
             ctx.restore();
         });
-        renderList();
     }
+
     function renderList(){
         foodList.innerHTML='';
         foods.forEach((f,i)=>{
@@ -149,33 +161,44 @@
             foodList.appendChild(div);
         });
     }
+
     function addFood(){
         const val=document.getElementById('newFood').value.trim();
         if(val && !foods.includes(val)){
             foods.push(val);
             document.getElementById('newFood').value='';
-            drawWheel();
+            refreshAll();
             saveFoods();
         }
     }
     function deleteFood(i){
         foods.splice(i,1);
-        drawWheel();
+        refreshAll();
         saveFoods();
     }
+
     function spin(){
-        if(foods.length===0) return;
+        if(foods.length===0 || spinning) return;
+        spinning = true;
         result.textContent='转转转...';
-        const spinDeg=1080+Math.random()*3600;
-        canvas.style.transform=`rotate(${spinDeg}deg)`;
-        setTimeout(()=>{
-            const realDeg=spinDeg%360;
-            const index=Math.floor((360-realDeg+10)/(360/foods.length))%foods.length;
-            result.innerHTML=`今天吃：<br><span style="font-size:4rem;color:#ffd700">${foods[index]}</span> ！`;
-        },4600);
+        const target = spinAngle + 1080 + Math.random()*3600;
+        const startTime = Date.now();
+        function animate(){
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed/4600,1);
+            spinAngle = target * (1 - Math.pow(1-progress,3));
+            drawWheel();
+            if(progress<1) requestAnimationFrame(animate);
+            else{
+                spinning = false;
+                const realRad = spinAngle % (2*Math.PI);
+                const index = Math.floor((2*Math.PI - realRad)/(2*Math.PI/foods.length)) % foods.length;
+                result.innerHTML=`今天吃：<br><span style="font-size:4rem;color:#ffd700">${foods[index]}</span> ！`;
+            }
+        }
+        animate();
     }
 
-    // 回车进入房间
     document.getElementById('roomInput').addEventListener('keydown',e=>{if(e.key==='Enter')enterRoom()});
 </script>
 </body>
